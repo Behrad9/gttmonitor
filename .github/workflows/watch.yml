@@ -1,0 +1,53 @@
+# Save this file in your repo as:  .github/workflows/watch.yml
+name: gtt-slot-watcher
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # GitHub's minimum interval; runs can start a few minutes late
+  workflow_dispatch:         # lets you start it by hand from the Actions tab
+
+concurrency:
+  group: gtt-watcher
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The runner is wiped after every run, so the watcher's memory
+      # (known slots, login, last status time) is kept in the Actions cache.
+      - name: Restore state
+        uses: actions/cache/restore@v4
+        with:
+          path: ufirst_state.json
+          key: state-${{ github.run_id }}
+          restore-keys: state-
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run watcher
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HEARTBEAT: "1"
+          HEARTBEAT_EVERY: "15"
+          MIN_DATE: "2026-10-14"
+        run: python ufirst_watcher.py
+
+      - name: Save state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ufirst_state.json
+          key: state-${{ github.run_id }}
