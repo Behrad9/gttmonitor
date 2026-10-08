@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ufirst_state.json
-          key: state-${{ github.run_id }}
+          key: state-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: state-
 
       - name: Install dependencies
@@ -50,4 +50,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ufirst_state.json
-          key: state-${{ github.run_id }}
+          key: state-${{ github.run_id }}-${{ github.run_attempt }}
