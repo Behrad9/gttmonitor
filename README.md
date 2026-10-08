@@ -1,2 +1,2 @@
 # gttmonitor
-monitor ufirst for new open appointments.
+monitor ufirst website for new open appointments.
