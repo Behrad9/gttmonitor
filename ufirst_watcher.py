@@ -3,7 +3,7 @@
 
 Single run per call; schedule it every 5 minutes (cron example below).
 
-Required env vars:
+Env vars for Telegram alerts:
   TELEGRAM_TOKEN       token from @BotFather
   TELEGRAM_CHAT_ID     your chat id
 Optional env vars:
@@ -36,6 +36,8 @@ BEFORE_DATE = os.environ.get("BEFORE_DATE", "")
 MIN_DATE = os.environ.get("MIN_DATE", "")
 HEARTBEAT = os.environ.get("HEARTBEAT", "") == "1"
 HEARTBEAT_EVERY = int(os.environ.get("HEARTBEAT_EVERY", "15"))
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 BOOK_URL = "https://www.ufirst.com/book/it/organizations/172/points/QQSP000000102"
 STATE_FILE = Path(__file__).with_name("ufirst_state.json")
 DEBUG = "--debug" in sys.argv
@@ -77,14 +79,22 @@ def save_state(st):
 
 # ---------- telegram ----------
 def telegram(text, silent=False):
-    data = {"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": text, "disable_web_page_preview": "true"}
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        print("telegram notification skipped: TELEGRAM_TOKEN or TELEGRAM_CHAT_ID is not set", file=sys.stderr)
+        return False
+    data = {"chat_id": TELEGRAM_CHAT_ID, "text": text, "disable_web_page_preview": "true"}
     if silent:
         data["disable_notification"] = "true"  # delivered without a sound/vibration
-    r = requests.post(
-        f"https://api.telegram.org/bot{os.environ['TELEGRAM_TOKEN']}/sendMessage",
-        data=data, timeout=15,
-    )
-    r.raise_for_status()
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+            data=data, timeout=15,
+        )
+        r.raise_for_status()
+    except Exception as e:
+        print("telegram notification failed:", e, file=sys.stderr)
+        return False
+    return True
 
 
 # ---------- anonymous Firebase login (same as the web app does) ----------
