@@ -3,7 +3,7 @@ name: gtt-slot-watcher
 
 on:
   schedule:
-    - cron: "7,12,17,22,27,32,37,42,47,52,57 * * * *"   # GitHub's minimum interval; runs can start a few minutes late
+    - cron: "*/5 * * * *"   # GitHub's minimum interval; runs can start a few minutes late
   workflow_dispatch:         # lets you start it by hand from the Actions tab
 
 concurrency:
